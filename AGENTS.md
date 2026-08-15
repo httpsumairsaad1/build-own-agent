@@ -1,6 +1,6 @@
 # AGENTS.md
 
-You are a **principal-level full-stack engineer and AI implementation agent** working on **biasly**, a production-style AI-powered news analysis website.
+You are a **principal-level full-stack engineer and AI implementation agent** working on **SKEW**, a production-style AI-powered news analysis website.
 
 Your job is to understand the request, use the right project skills, create a clear implementation prompt, ask for approval, then implement.
 
@@ -8,7 +8,7 @@ Your job is to understand the request, use the right project skills, create a cl
 
 # This is NOT the Next.js you know
 
-This version has breaking changes â€” APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+This version has breaking changes APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 
 <!-- END:nextjs-agent-rules -->
 
@@ -16,7 +16,7 @@ This version has breaking changes â€” APIs, conventions, and file structure
 
 # 1. Product
 
-biasly collects real news articles from configured sources, analyzes them with AI, stores them in Supabase, and displays reader-friendly sentiment and framing insights.
+SKEW collects real news articles from configured sources, analyzes them with AI, stores them in Supabase, and displays reader-friendly sentiment and framing insights.
 
 Build only:
 
@@ -47,7 +47,7 @@ For every implementation request:
 5. Ask a focused question only if the task has meaningful ambiguity.
 6. Create a detailed prompt file in `prompts/`.
 7. Ask: `I prepared the implementation prompt at prompts/<file-name>.md. Is this good to execute?`
-8. On approval, re-read the approved prompt file in prompts/ and implement strictly to it. Implement only after user approval.
+8. On approval, re-read the approved prompt file in prompts/ and implement it strictly. Implement only after user approval.
 9. Run available checks.
 10. Share exact steps to test or run the completed feature.
 
@@ -403,7 +403,7 @@ Scraping and AI analysis must be triggered with `POST` for manual calls. The Ver
 
 # 15. Admin secret rule
 
-All action routes that start or mutate work must require a shared admin secret sent as the `x-biasly-admin-secret` request header. Store the value in the `BIASLY_ADMIN_SECRET` environment variable.
+All action routes that start or mutate work must require a shared admin secret sent as the `x-SKEW-admin-secret` request header. Store the value in the `SKEW_ADMIN_SECRET` environment variable.
 
 Do not put the secret in the URL query string.
 
@@ -419,7 +419,7 @@ Manual scraping runs the **scrape-to-insert pipeline** (section 9) on demand, fe
 
 Manual-specific rules:
 
-- Trigger with `POST /api/scrape` and require the `x-biasly-admin-secret` header (section 15).
+- Trigger with `POST /api/scrape` and require the `x-SKEW-admin-secret` header (section 15).
 - Select sources per section 8: use the user's choice (e.g. "3 sources, 5 per source"); otherwise default to all active sources and up to 5 valid articles per source.
 - It is better to insert fewer good articles than to insert bad ones.
 - Return the same **run logging** summary object (section 9) in the API response.
@@ -431,7 +431,7 @@ Manual-specific rules:
 
 After completing scraping, scheduler, or AI analysis work, always share exact test steps.
 
-For API features, share the exact curl commands needed to hit each endpoint, including the correct method, headers, and JSON body. Always include the `x-biasly-admin-secret` header where required.
+For API features, share the exact curl commands needed to hit each endpoint, including the correct method, headers, and JSON body. Always include the `x-SKEW-admin-secret` header where required.
 
 Tell the user to watch the terminal running the Next.js dev server because scrape and analysis progress is logged there.
 
@@ -511,7 +511,7 @@ Protect the cron route using the `CRON_SECRET` environment variable, which Verce
 
 In local development, skip the secret check so the route can be tested manually.
 
-Do not use `BIASLY_ADMIN_SECRET` to protect the cron route. Do not add `CRON_SECRET` to `.env.local`.
+Do not use `SKEW_ADMIN_SECRET` to protect the cron route. Do not add `CRON_SECRET` to `.env.local`.
 
 When implementing Oxylabs Scheduler, always deliver all parts together:
 
@@ -521,6 +521,10 @@ When implementing Oxylabs Scheduler, always deliver all parts together:
 - Vercel Cron config â€” registers the automatic hourly trigger
 - Cron pipeline route â€” chains scheduled result processing then AI analysis
 
+
+- **Oxylabs Scheduler** tells Oxylabs to scrape our active source homepages every hour and store the results. That’s set up once with a route in our app.
+- **Vercel Cron** tells Vercel to call our pipeline 15  minutes later, to take those stored results, turn them into articles, and analyze them. That’s set up once
+
 Scheduler processing must use the same validation, cleanup, dedupe, and console summary logging as manual scraping.
 
 # 19. AI analysis and UI framing
@@ -529,7 +533,7 @@ AI analysis must process valid articles missing analysis, detected by the **pend
 
 AI analysis must be triggered with `POST /api/analyze`.
 
-The request must include the `x-biasly-admin-secret` header.
+The request must include the `x-SKEW-admin-secret` header.
 
 Default behavior should process all pending valid articles.
 
@@ -650,7 +654,7 @@ Canonical list lives in `.env.example`. Only `NEXT_PUBLIC_*` values may reach br
 | `SUPABASE_SERVICE_ROLE_KEY`                                                   | Service-role DB access for writes and pipeline reads                                    | server only     |
 | `OXY_WSA_USERNAME` / `OXY_WSA_PASSWORD`                                       | Oxylabs Web Scraper API + Scheduler auth                                                | server only     |
 | `OPENAI_API_KEY`                                                              | AI analysis and `text-embedding-3-small`                                                | server only     |
-| `BIASLY_ADMIN_SECRET`                                                         | Shared secret for `x-biasly-admin-secret` on action routes (section 15)                 | server only     |
+| `SKEW_ADMIN_SECRET`                                                         | Shared secret for `x-SKEW-admin-secret` on action routes (section 15)                 | server only     |
 | `ANALYSIS_BATCH_SIZE`                                                         | Optional; articles analyzed per batch (default 5)                                       | server only     |
 | `CRON_SECRET`                                                                 | Protects `GET /api/cron/pipeline`; injected by Vercel, not in `.env.local` (section 18) | server only     |
 
