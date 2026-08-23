@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} dark antialiased`}>
-      <body className="min-h-screen flex flex-col bg-[#0A0A0A] text-white font-sans selection:bg-[#E64A19] selection:text-white">
+      <body className="min-h-screen flex flex-col font-sans selection:bg-[#E64A19] selection:text-white">
         {children}
       </body>
     </html>
