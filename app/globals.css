@@ -1,26 +1,107 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* vibeXnews Color Architecture */
+  --v-obsidian: #0a0a0a;
+  --v-panel: #1e1e1e;
+  --v-elevated: #2c2c2c;
+  --v-border: #2c2c2c;
+  --v-border-subtle: #242424;
+  --v-border-active: #e64a19;
+  
+  /* Accents */
+  --v-accent-primary: #e64a19;
+  --v-accent-secondary: #ff9800;
+  --v-accent-crimson: #d32f2f;
+  --v-accent-ember: #fdd835;
+  --v-accent-gold: #ffd54f;
+  
+  /* Text & Surfaces */
+  --v-text-primary: #ffffff;
+  --v-text-secondary: #e0e0e0;
+  --v-text-muted: #9e9e9e;
+  --v-text-dim: #616161;
+  --v-surface-dark: #121212;
+  
+  /* Sentiment & Political Framing Scale */
+  --v-left-bias: #c62828;
+  --v-center-bias: #757575;
+  --v-right-bias: #ffd54f;
+
+  /* Typography variables */
+  --font-inter: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  
+  --color-v-obsidian: var(--v-obsidian);
+  --color-v-panel: var(--v-panel);
+  --color-v-elevated: var(--v-elevated);
+  --color-v-surface: var(--v-surface-dark);
+  --color-v-border: var(--v-border);
+  --color-v-border-subtle: var(--v-border-subtle);
+  
+  --color-v-accent: var(--v-accent-primary);
+  --color-v-amber: var(--v-accent-secondary);
+  --color-v-crimson: var(--v-accent-crimson);
+  --color-v-ember: var(--v-accent-ember);
+  --color-v-gold: var(--v-accent-gold);
+  
+  --color-v-left: var(--v-left-bias);
+  --color-v-center: var(--v-center-bias);
+  --color-v-right: var(--v-right-bias);
+  
+  --color-v-text-primary: var(--v-text-primary);
+  --color-v-text-secondary: var(--v-text-secondary);
+  --color-v-text-muted: var(--v-text-muted);
+  --color-v-text-dim: var(--v-text-dim);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Custom Scrollbar for sleek dark design */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+::-webkit-scrollbar-thumb {
+  background: #2c2c2c;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #e64a19;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--v-obsidian);
+  color: var(--v-text-primary);
+  font-family: var(--font-inter);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* vibeXnews Card Glow & Hover Effects */
+.vxn-card-glow {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.vxn-card-glow:hover {
+  border-color: rgba(230, 74, 25, 0.45);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.8), 0 0 20px rgba(230, 74, 25, 0.12);
+  transform: translateY(-2px);
+}
+
+.vxn-badge-pulse {
+  animation: pulse-subtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.75;
+  }
 }
