@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Show, UserButton } from "@clerk/nextjs";
 
 // --- Stylized Monogram Brand Logo ---
 export function VXNLogo({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
@@ -174,32 +175,50 @@ export function Header({ searchQuery = "", onSearchChange }: HeaderProps) {
             )}
           </div>
 
-          {/* Sign In button */}
-          <Link
-            href="/sign-in"
-            className="px-3.5 py-1.5 text-xs font-medium text-[#E0E0E0] bg-[#1E1E1E] hover:bg-[#2C2C2C] border border-[#2C2C2C] rounded-md transition-colors"
-          >
-            Sign In
-          </Link>
+          {/* Clerk Auth Integration via Core 3 <Show> component */}
+          <Show when="signed-out">
+            <Link
+              href="/sign-in"
+              className="px-3.5 py-1.5 text-xs font-semibold text-[#E0E0E0] bg-[#1E1E1E] hover:bg-[#2C2C2C] border border-[#2C2C2C] rounded-md transition-colors"
+            >
+              Sign In
+            </Link>
+          </Show>
+
+          <Show when="signed-in">
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: "w-8 h-8 rounded-full border border-[#2C2C2C] hover:border-[#E64A19] transition-colors",
+                  userButtonPopoverCard: "bg-[#1E1E1E] border border-[#2C2C2C] shadow-2xl text-white",
+                  userButtonPopoverActionButton: "hover:bg-[#2C2C2C] text-white",
+                  userButtonPopoverActionButtonText: "text-[#E0E0E0]",
+                  userButtonPopoverFooter: "border-t border-[#2C2C2C]",
+                },
+              }}
+            />
+          </Show>
 
           {/* Subscribe / Live Alerts Button */}
-          <Link
-            href="/sign-in"
-            className="hidden lg:flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-[#D32F2F] via-[#E64A19] to-[#FF9800] hover:opacity-95 rounded-md shadow-sm transition-all"
-          >
-            <svg
-              className="w-3.5 h-3.5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          <Show when="signed-out">
+            <Link
+              href="/sign-up"
+              className="hidden lg:flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-[#D32F2F] via-[#E64A19] to-[#FF9800] hover:opacity-95 rounded-md shadow-sm transition-all"
             >
-              <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
-            </svg>
-            <span>Stay Vibe</span>
-          </Link>
+              <svg
+                className="w-3.5 h-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
+              </svg>
+              <span>Stay Vibe</span>
+            </Link>
+          </Show>
 
           {/* Mobile Menu Toggle */}
           <button
@@ -249,13 +268,15 @@ export function Header({ searchQuery = "", onSearchChange }: HeaderProps) {
                 </Link>
               );
             })}
-            <Link
-              href="/sign-in"
-              onClick={() => setMobileMenuOpen(false)}
-              className="px-3 py-2 text-xs text-left rounded-md bg-[#2C2C2C] text-[#FF9800] font-semibold col-span-2 text-center"
-            >
-              Sign In / Account
-            </Link>
+            <Show when="signed-out">
+              <Link
+                href="/sign-in"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 text-xs text-left rounded-md bg-[#2C2C2C] text-[#FF9800] font-semibold col-span-2 text-center"
+              >
+                Sign In / Register
+              </Link>
+            </Show>
           </div>
         </div>
       )}
