@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -8,7 +8,8 @@ import { ArticleCard } from "@/components/ArticleCard";
 import { BiasMeter } from "@/components/BiasMeter";
 import { SentimentBadge, FramingBadge } from "@/components/Badges";
 import { ArticleThumbnail } from "@/components/ArticleThumbnail";
-import { MOCK_ARTICLES, Article } from "@/lib/data/mock-articles";
+import type { Article } from "@/lib/data/mock-articles";
+import { getArticles, getDashboardMetrics } from "@/lib/supabase/queries/articles";
 
 const CATEGORIES = [
   "All",
@@ -21,11 +22,30 @@ const CATEGORIES = [
 ];
 
 export default function VibeXnewsHome() {
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set(["gen-z-media-views"]));
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [sortOption, setSortOption] = useState<"latest" | "polarized" | "balanced">("latest");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [metrics, setMetrics] = useState({ sourceCount: 0, articleCount: 0, avgConfidence: 0 });
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      const [data, m] = await Promise.all([getArticles(), getDashboardMetrics()]);
+      if (isMounted) {
+        setArticles(data);
+        setMetrics(m);
+        setIsLoading(false);
+      }
+    }
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -48,7 +68,7 @@ export default function VibeXnewsHome() {
 
   // Filter & Sort logic
   const filteredArticles = useMemo(() => {
-    return MOCK_ARTICLES.filter((art: Article) => {
+    return articles.filter((art: Article) => {
       const matchesCat =
         selectedCategory === "All" ||
         selectedCategory === "More +" ||
@@ -70,7 +90,7 @@ export default function VibeXnewsHome() {
       }
       return 0; // default latest
     });
-  }, [selectedCategory, searchQuery, sortOption]);
+  }, [articles, selectedCategory, searchQuery, sortOption]);
 
   const featuredArticle = filteredArticles.find((a) => a.isFeatured) || filteredArticles[0];
   const gridArticles = filteredArticles.filter((a) => a.id !== featuredArticle?.id);
@@ -111,15 +131,23 @@ export default function VibeXnewsHome() {
             {/* Quick Metrics Dashboard Bar */}
             <div className="grid grid-cols-3 gap-3 bg-[#1E1E1E] p-3 rounded-xl border border-[#2C2C2C] shadow-sm">
               <div className="text-center px-2">
-                <span className="block text-lg font-bold text-white font-mono">14</span>
+                <span className="block text-lg font-bold text-white font-mono">
+                  {isLoading ? "—" : metrics.sourceCount > 0 ? metrics.sourceCount : "0"}
+                </span>
                 <span className="text-[10px] text-[#9E9E9E] uppercase tracking-wider">Sources</span>
               </div>
               <div className="text-center px-2 border-x border-[#2C2C2C]">
-                <span className="block text-lg font-bold text-[#FF9800] font-mono">100%</span>
+                <span className="block text-lg font-bold text-[#FF9800] font-mono">
+                  {isLoading ? "—" : metrics.articleCount > 0 ? metrics.articleCount : "0"}
+                </span>
                 <span className="text-[10px] text-[#9E9E9E] uppercase tracking-wider">AI Scored</span>
               </div>
               <div className="text-center px-2">
-                <span className="block text-lg font-bold text-emerald-400 font-mono">94.2%</span>
+                <span className="block text-lg font-bold text-emerald-400 font-mono">
+                  {isLoading || metrics.articleCount === 0
+                    ? "—"
+                    : `${(metrics.avgConfidence * 100).toFixed(1)}%`}
+                </span>
                 <span className="text-[10px] text-[#9E9E9E] uppercase tracking-wider">Confidence</span>
               </div>
             </div>
@@ -324,21 +352,33 @@ export default function VibeXnewsHome() {
             </div>
           </div>
 
-          {gridArticles.length === 0 ? (
-            <div className="bg-[#1E1E1E] rounded-xl border border-[#2C2C2C] p-12 text-center space-y-3">
-              <h4 className="text-base font-semibold text-white">No articles match your filter</h4>
-              <p className="text-xs text-[#9E9E9E]">
-                Try adjusting your search query or selecting &quot;All&quot; topics.
-              </p>
-              <button
-                onClick={() => {
-                  setSelectedCategory("All");
-                  setSearchQuery("");
-                }}
-                className="px-4 py-2 text-xs font-semibold text-white bg-[#E64A19] rounded-md"
-              >
-                Reset Filters
-              </button>
+          {isLoading ? (
+            <div className="bg-[#1E1E1E] rounded-xl border border-[#2C2C2C] p-12 text-center flex flex-col items-center justify-center space-y-3">
+              <div className="w-8 h-8 rounded-full border-2 border-[#E64A19] border-t-transparent animate-spin" />
+              <p className="text-xs font-mono text-[#9E9E9E]">Loading perspectives from Supabase...</p>
+            </div>
+          ) : gridArticles.length === 0 ? (
+            <div className="bg-[#1E1E1E] rounded-xl border border-[#2C2C2C] p-12 text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-[#1A1A1A] border border-[#2C2C2C] flex items-center justify-center mx-auto text-2xl">
+                📡
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-base font-semibold text-white">Awaiting first pipeline run</h4>
+                <p className="text-xs text-[#9E9E9E] max-w-sm mx-auto">
+                  No analyzed articles in Supabase yet. Run the scraping and analysis pipeline to populate your feed.
+                </p>
+              </div>
+              {(selectedCategory !== "All" || searchQuery.trim() !== "") && (
+                <button
+                  onClick={() => {
+                    setSelectedCategory("All");
+                    setSearchQuery("");
+                  }}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-[#E64A19] rounded-md"
+                >
+                  Reset Filters
+                </button>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

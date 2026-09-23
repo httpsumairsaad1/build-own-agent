@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, use } from "react";
+import React, { useState, use, useEffect } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getArticleById, getRelatedArticles } from "@/lib/data/mock-articles";
+import { Article } from "@/lib/data/mock-articles";
+import { getArticleById, getRelatedArticles } from "@/lib/supabase/queries/articles";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { BiasMeter } from "@/components/BiasMeter";
@@ -17,16 +18,52 @@ interface ArticleDetailPageProps {
 
 export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
   const { id } = use(params);
-  const article = getArticleById(id);
+  const [article, setArticle] = useState<Article | null>(null);
+  const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [isSaved, setIsSaved] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  if (!article) {
+  useEffect(() => {
+    let isMounted = true;
+    async function loadArticle() {
+      setIsLoading(true);
+      const art = await getArticleById(id);
+      if (!isMounted) return;
+      setArticle(art);
+      if (art) {
+        const related = await getRelatedArticles(art.id, art.category, 3);
+        if (isMounted) {
+          setRelatedArticles(related);
+        }
+      }
+      setIsLoading(false);
+    }
+    loadArticle();
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
+  if (!isLoading && !article) {
     return notFound();
   }
 
-  const relatedArticles = getRelatedArticles(article.id, article.category, 3);
+  if (isLoading || !article) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] text-white flex flex-col font-sans">
+        <Header />
+        <main className="flex-1 max-w-[1280px] w-full mx-auto px-4 lg:px-8 py-16 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="w-8 h-8 rounded-full border-2 border-[#E64A19] border-t-transparent animate-spin" />
+            <span className="text-xs font-mono text-[#9E9E9E]">Loading perspective stream...</span>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   const showToast = (msg: string) => {
     setToastMessage(msg);

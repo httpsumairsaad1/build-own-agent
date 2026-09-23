@@ -1,18 +1,37 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ArticleCard } from "@/components/ArticleCard";
-import { getArticlesByCategory } from "@/lib/data/mock-articles";
+import { Article } from "@/lib/data/mock-articles";
+import { getArticlesByCategory } from "@/lib/supabase/queries/articles";
 
 export default function PopCulturePage() {
+  const [articlesList, setArticlesList] = useState<Article[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<"latest" | "polarized" | "balanced">("latest");
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      setIsLoading(true);
+      const data = await getArticlesByCategory("Pop Culture");
+      if (isMounted) {
+        setArticlesList(data);
+        setIsLoading(false);
+      }
+    }
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const articles = useMemo(() => {
-    return getArticlesByCategory("Pop Culture")
+    return articlesList
       .filter((art) => {
         return (
           searchQuery.trim() === "" ||
@@ -30,7 +49,7 @@ export default function PopCulturePage() {
         }
         return 0;
       });
-  }, [searchQuery, sortOption]);
+  }, [articlesList, searchQuery, sortOption]);
 
   const toggleBookmark = (id: string) => {
     setSavedIds((prev) => {
@@ -106,16 +125,35 @@ export default function PopCulturePage() {
 
       {/* Grid */}
       <main className="flex-1 max-w-[1280px] w-full mx-auto px-4 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {articles.map((art) => (
-            <ArticleCard
-              key={art.id}
-              article={art}
-              isSaved={savedIds.has(art.id)}
-              onToggleBookmark={toggleBookmark}
-            />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="bg-[#1E1E1E] rounded-xl border border-[#2C2C2C] p-12 text-center flex flex-col items-center justify-center space-y-3">
+            <div className="w-8 h-8 rounded-full border-2 border-[#E64A19] border-t-transparent animate-spin" />
+            <p className="text-xs font-mono text-[#9E9E9E]">Loading pop culture perspectives...</p>
+          </div>
+        ) : articles.length === 0 ? (
+          <div className="bg-[#1E1E1E] rounded-xl border border-[#2C2C2C] p-12 text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-[#1A1A1A] border border-[#2C2C2C] flex items-center justify-center mx-auto text-2xl">
+              📡
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-base font-semibold text-white">Awaiting first pipeline run</h4>
+              <p className="text-xs text-[#9E9E9E] max-w-sm mx-auto">
+                No analyzed Pop Culture articles in Supabase yet. Run the scraping and analysis pipeline to populate this category.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {articles.map((art) => (
+              <ArticleCard
+                key={art.id}
+                article={art}
+                isSaved={savedIds.has(art.id)}
+                onToggleBookmark={toggleBookmark}
+              />
+            ))}
+          </div>
+        )}
       </main>
 
       <Footer />
