@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -40,6 +40,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       articles: {
         Row: {
@@ -81,6 +82,7 @@ export interface Database {
           scraped_at?: string;
           analyzed_at?: string | null;
         };
+        Relationships: [];
       };
       article_analyses: {
         Row: {
@@ -137,6 +139,7 @@ export interface Database {
           model?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
       logs: {
         Row: {
@@ -163,6 +166,7 @@ export interface Database {
           details?: Json | null;
           created_at?: string;
         };
+        Relationships: [];
       };
       oxylabs_schedules: {
         Row: {
@@ -189,6 +193,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       oxylabs_schedule_runs: {
         Row: {
@@ -218,6 +223,7 @@ export interface Database {
           articles_inserted?: number;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
   };
@@ -234,3 +240,5 @@ export type JoinedArticleRow = ArticleRow & {
   sources: SourceRow | null;
   article_analyses: ArticleAnalysisRow | null;
 };
+
+
