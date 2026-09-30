@@ -1,22 +1,22 @@
 ﻿import "server-only";
 
 import { generateText, Output } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 import { articleAnalysisSchema, type ArticleAnalysisOutput } from "./schema";
 
-const ANALYSIS_MODEL = "gpt-5.4-mini";
+const ANALYSIS_MODEL = "gemini-2.5-flash";
 const MAX_ARTICLE_TEXT_LENGTH = 30_000;
 
 export async function analyzeArticle(article: { title: string; rawText: string }): Promise<{
   analysis: ArticleAnalysisOutput;
   model: string;
 }> {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("Missing OPENAI_API_KEY.");
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("Missing GEMINI_API_KEY.");
   }
 
   const result = await generateText({
-    model: openai(ANALYSIS_MODEL),
+    model: google(ANALYSIS_MODEL),
     output: Output.object({
       name: "article_analysis",
       description: "A neutral article sentiment and AI-estimated political framing analysis.",
