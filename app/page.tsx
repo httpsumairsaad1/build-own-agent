@@ -7,7 +7,7 @@ import { Footer } from "@/components/Footer";
 import { ArticleCard } from "@/components/ArticleCard";
 import { BiasMeter } from "@/components/BiasMeter";
 import { SentimentBadge, FramingBadge } from "@/components/Badges";
-import { ArticleThumbnail } from "@/components/ArticleThumbnail";
+import { SourceArticleImage } from "@/components/SourceArticleImage";
 import type { Article } from "@/lib/data/mock-articles";
 import { getArticles, getDashboardMetrics } from "@/lib/supabase/queries/articles";
 
@@ -240,9 +240,10 @@ export default function VibeXnewsHome() {
                 {/* Media Thumbnail linking to article details */}
                 <div className="lg:col-span-4">
                   <Link href={`/article/${featuredArticle.id}`} className="block">
-                    <ArticleThumbnail
-                      theme={featuredArticle.imageTheme}
+                    <SourceArticleImage
+                      article={featuredArticle}
                       className="w-full h-56 lg:h-64 group-hover:scale-[1.02] transition-transform duration-300"
+                      sizes="(max-width: 1023px) 100vw, 33vw"
                     />
                   </Link>
                 </div>

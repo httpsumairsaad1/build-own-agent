@@ -97,6 +97,7 @@ export function mapSupabaseToArticle(row: JoinedArticleRow): Article {
     publishedAt: formatPublishedTime(row.published_at),
     readTime: calculateReadTime(row.raw_text),
     author: `${source?.name || "Editorial"} Staff`,
+    imageUrl: row.image_url,
     imageTheme: mapCategoryToTheme(row.category),
     bias: {
       left: analysis?.left_percentage ?? 15,

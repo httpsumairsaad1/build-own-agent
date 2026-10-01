@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Article } from "@/lib/data/mock-articles";
 import { BiasMeter } from "./BiasMeter";
 import { SentimentBadge, FramingBadge } from "./Badges";
-import { ArticleThumbnail } from "./ArticleThumbnail";
+import { SourceArticleImage } from "./SourceArticleImage";
 
 interface ArticleCardProps {
   article: Article;
@@ -21,9 +21,10 @@ export function ArticleCard({
       <div className="space-y-3">
         {/* Clickable Image Preview */}
         <Link href={`/article/${article.id}`} className="block overflow-hidden rounded-lg">
-          <ArticleThumbnail
-            theme={article.imageTheme}
+          <SourceArticleImage
+            article={article}
             className="w-full h-36 group-hover:scale-[1.02] transition-transform duration-300"
+            sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw"
           />
         </Link>
 

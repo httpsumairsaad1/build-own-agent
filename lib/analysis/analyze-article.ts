@@ -1,18 +1,24 @@
 ﻿import "server-only";
 
 import { generateText, Output } from "ai";
-import { google } from "@ai-sdk/google";
+import { createGoogle } from "@ai-sdk/google";
 import { articleAnalysisSchema, type ArticleAnalysisOutput } from "./schema";
 
-const ANALYSIS_MODEL = "gemini-2.5-flash";
+const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+
+const google = createGoogle({
+  apiKey,
+});
+
+const ANALYSIS_MODEL = "gemini-3.5-flash-lite"; // Or "gemini-3.8-flash"
 const MAX_ARTICLE_TEXT_LENGTH = 30_000;
 
 export async function analyzeArticle(article: { title: string; rawText: string }): Promise<{
   analysis: ArticleAnalysisOutput;
   model: string;
 }> {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error("Missing GEMINI_API_KEY.");
+  if (!apiKey) {
+    throw new Error("Missing GEMINI_API_KEY / GOOGLE_GENERATIVE_AI_API_KEY in process.env");
   }
 
   const result = await generateText({

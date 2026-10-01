@@ -1,9 +1,19 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Allow the local network address shown by `next dev` to request HMR and
-  // development diagnostics. This setting applies only during development.
   allowedDevOrigins: ["192.168.100.7"],
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**", // Allows all secure HTTPS external image sources
+      },
+      {
+        protocol: "http",
+        hostname: "**", // Allows HTTP news image sources if needed
+      },
+    ],
+  },
 };
 
 export default nextConfig;

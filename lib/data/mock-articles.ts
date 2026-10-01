@@ -21,6 +21,7 @@ export type Article = {
   publishedAt: string;
   readTime: string;
   author: string;
+  imageUrl?: string;
   imageTheme: "politics" | "tech" | "social" | "economy" | "climate" | "culture";
   bias: BiasBreakdown;
   biasLabel: "Left" | "Center" | "Right" | "Mixed" | "Unclear";

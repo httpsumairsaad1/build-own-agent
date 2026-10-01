@@ -9,7 +9,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { BiasMeter } from "@/components/BiasMeter";
 import { SentimentBadge, FramingBadge } from "@/components/Badges";
-import { ArticleThumbnail } from "@/components/ArticleThumbnail";
+import { SourceArticleImage } from "@/components/SourceArticleImage";
 import { ArticleCard } from "@/components/ArticleCard";
 
 interface ArticleDetailPageProps {
@@ -203,9 +203,10 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
           {/* Main Story Column */}
           <div className="lg:col-span-7 space-y-6">
             {/* Editorial Thumbnail */}
-            <ArticleThumbnail
-              theme={article.imageTheme}
+            <SourceArticleImage
+              article={article}
               className="w-full h-72 lg:h-80 rounded-xl"
+              sizes="(max-width: 1023px) 100vw, 58vw"
             />
 
             {/* Key Takeaways Box */}
