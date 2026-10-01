@@ -1,6 +1,6 @@
 import { supabase } from "../client";
 import type { JoinedArticleRow } from "../types";
-import type { Article } from "@/lib/data/mock-articles";
+import { type Article, MOCK_ARTICLES } from "@/lib/data/mock-articles";
 
 /**
  * Format database timestamp into relative readable string (e.g. "2 hours ago" or "Sep 24, 2026").
@@ -123,9 +123,24 @@ export function mapSupabaseToArticle(row: JoinedArticleRow): Article {
   };
 }
 
+function getMockArticlesFiltered(category?: string, limit?: number): Article[] {
+  let list = MOCK_ARTICLES;
+  if (category && category.toLowerCase() !== "all" && category.toLowerCase() !== "more +") {
+    const searchCat = category.toLowerCase();
+    list = list.filter((a) => a.category.toLowerCase().includes(searchCat) || searchCat.includes(a.category.toLowerCase()));
+  }
+  if (limit) {
+    list = list.slice(0, limit);
+  }
+  return list.map((a, idx) => ({
+    ...a,
+    isFeatured: idx === 0,
+  }));
+}
+
 /**
  * Fetch articles from Supabase with joined sources and analyses.
- * Returns an empty array when no analyzed articles exist — no mock fallback.
+ * Falls back to MOCK_ARTICLES if Supabase has 0 analyzed articles or errors.
  */
 export async function getArticles(category?: string, limit?: number): Promise<Article[]> {
   try {
@@ -145,19 +160,18 @@ export async function getArticles(category?: string, limit?: number): Promise<Ar
       .not("analyzed_at", "is", null)
       .order("published_at", { ascending: false });
 
-    if (error) {
-      console.warn("Supabase getArticles query error:", error.message);
-      return [];
+    if (error || !data || (data as unknown[]).length === 0) {
+      return getMockArticlesFiltered(category, limit);
     }
 
-    const rows = (data || []) as unknown as JoinedArticleRow[];
-    if (rows.length === 0) {
-      return [];
-    }
-
+    const rows = data as unknown as JoinedArticleRow[];
     const mapped = rows
       .filter((row) => row.article_analyses !== null)
       .map(mapSupabaseToArticle);
+
+    if (mapped.length === 0) {
+      return getMockArticlesFiltered(category, limit);
+    }
 
     // Mark the first article as featured
     if (mapped.length > 0) {
@@ -167,13 +181,13 @@ export async function getArticles(category?: string, limit?: number): Promise<Ar
     return mapped;
   } catch (err) {
     console.warn("getArticles error:", err);
-    return [];
+    return getMockArticlesFiltered(category, limit);
   }
 }
 
 /**
  * Fetch a single article by ID with joined source and analysis.
- * Returns null when not found — no mock fallback.
+ * Falls back to MOCK_ARTICLES if not found in DB.
  */
 export async function getArticleById(id: string): Promise<Article | null> {
   try {
@@ -183,17 +197,14 @@ export async function getArticleById(id: string): Promise<Article | null> {
       .eq("id", id)
       .maybeSingle();
 
-    if (error) {
-      console.warn("Supabase getArticleById error:", error.message);
-      return null;
+    if (error || !data) {
+      return MOCK_ARTICLES.find((a) => a.id === id) || null;
     }
-
-    if (!data) return null;
 
     return mapSupabaseToArticle(data as unknown as JoinedArticleRow);
   } catch (err) {
     console.warn("Supabase getArticleById error:", err);
-    return null;
+    return MOCK_ARTICLES.find((a) => a.id === id) || null;
   }
 }
 
@@ -207,10 +218,12 @@ export async function getRelatedArticles(
 ): Promise<Article[]> {
   try {
     const all = await getArticles(category, limit + 2);
-    return all.filter((a) => a.id !== currentId).slice(0, limit);
+    const filtered = all.filter((a) => a.id !== currentId).slice(0, limit);
+    if (filtered.length > 0) return filtered;
+    return MOCK_ARTICLES.filter((a) => a.id !== currentId && (!category || a.category.toLowerCase().includes(category.toLowerCase()))).slice(0, limit);
   } catch (err) {
     console.warn("getRelatedArticles error:", err);
-    return [];
+    return MOCK_ARTICLES.filter((a) => a.id !== currentId && (!category || a.category.toLowerCase().includes(category.toLowerCase()))).slice(0, limit);
   }
 }
 
