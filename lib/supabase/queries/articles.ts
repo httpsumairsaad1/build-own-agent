@@ -209,7 +209,7 @@ export async function getArticleById(id: string): Promise<Article | null> {
 }
 
 /**
- * Fetch related articles by category, excluding the current article.
+ * Fetch related articles using pgvector semantic similarity RPC or fallback to category.
  */
 export async function getRelatedArticles(
   currentId: string,
@@ -217,13 +217,60 @@ export async function getRelatedArticles(
   limit: number = 3
 ): Promise<Article[]> {
   try {
+    // 1. Try fetching current article's embedding from database
+    const { data: currentAnalysis, error: analysisError } = await supabase
+      .from("article_analyses")
+      .select("embedding")
+      .eq("article_id", currentId)
+      .maybeSingle();
+
+    const analysisRecord = currentAnalysis as { embedding?: number[] | string | null } | null;
+    if (!analysisError && analysisRecord?.embedding) {
+      // 2. Call match_articles RPC function for vector similarity
+      const { data: matches, error: rpcError } = await supabase.rpc("match_articles" as never, {
+        query_embedding: analysisRecord.embedding,
+        match_threshold: 0.2,
+        match_count: limit + 1,
+      } as never);
+
+      if (!rpcError && matches && (matches as unknown[]).length > 0) {
+        const matchedIds = (matches as { article_id: string; similarity: number }[])
+          .map((m) => m.article_id)
+          .filter((id) => id !== currentId)
+          .slice(0, limit);
+
+        if (matchedIds.length > 0) {
+          const { data: articlesData, error: articlesError } = await supabase
+            .from("articles")
+            .select("*, sources(*), article_analyses(*)")
+            .in("id", matchedIds);
+
+          if (!articlesError && articlesData && (articlesData as unknown[]).length > 0) {
+            const mapped = (articlesData as unknown as JoinedArticleRow[])
+              .filter((row) => row.article_analyses !== null)
+              .map(mapSupabaseToArticle);
+
+            if (mapped.length > 0) {
+              return mapped;
+            }
+          }
+        }
+      }
+    }
+
+    // 3. Fallback to category-based query or mock fallback
     const all = await getArticles(category, limit + 2);
     const filtered = all.filter((a) => a.id !== currentId).slice(0, limit);
     if (filtered.length > 0) return filtered;
-    return MOCK_ARTICLES.filter((a) => a.id !== currentId && (!category || a.category.toLowerCase().includes(category.toLowerCase()))).slice(0, limit);
+
+    return MOCK_ARTICLES.filter(
+      (a) => a.id !== currentId && (!category || a.category.toLowerCase().includes(category.toLowerCase()))
+    ).slice(0, limit);
   } catch (err) {
     console.warn("getRelatedArticles error:", err);
-    return MOCK_ARTICLES.filter((a) => a.id !== currentId && (!category || a.category.toLowerCase().includes(category.toLowerCase()))).slice(0, limit);
+    return MOCK_ARTICLES.filter(
+      (a) => a.id !== currentId && (!category || a.category.toLowerCase().includes(category.toLowerCase()))
+    ).slice(0, limit);
   }
 }
 

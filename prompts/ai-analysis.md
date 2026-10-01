@@ -84,7 +84,7 @@ Supabase currently contains seven article rows available for the pipeline to ins
 
 ## Manual test steps after implementation
 
-1. Add a valid server-only `OPENAI_API_KEY` and `VIBEXNEWS_ADMIN_SECRET` to `.env.local`, then restart the dev server:
+1. Add a valid server-only `GEMINI_API_KEY` and `VIBEXNEWS_ADMIN_SECRET` to `.env.local`, then restart the dev server:
 
 ```powershell
 npm run dev

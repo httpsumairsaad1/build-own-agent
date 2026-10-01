@@ -1,6 +1,9 @@
 -- vibeXnews Database Schema
 -- Supabase source of truth schema for sources, articles, analyses, logs, and scheduler tracking.
--- Note: pgvector and embedding vector(1536) are excluded here per AGENTS.md section 7 and will be added in section 20.
+-- Includes pgvector extension and embedding support.
+
+-- 0. ENABLE PGVECTOR EXTENSION
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;
 
 -- 1. SOURCES TABLE
 CREATE TABLE IF NOT EXISTS public.sources (
@@ -46,6 +49,7 @@ CREATE TABLE IF NOT EXISTS public.article_analyses (
   loaded_terms JSONB NOT NULL DEFAULT '[]'::jsonb,
   disclaimer TEXT,
   model TEXT NOT NULL,
+  embedding vector(1536), -- pgvector embedding column
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT check_percentage_sum CHECK (left_percentage + center_percentage + right_percentage = 100)
 );
@@ -93,6 +97,9 @@ CREATE INDEX IF NOT EXISTS idx_logs_created_at ON public.logs(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_oxylabs_schedules_source_id ON public.oxylabs_schedules(source_id);
 CREATE INDEX IF NOT EXISTS idx_oxylabs_schedule_runs_schedule_id ON public.oxylabs_schedule_runs(schedule_id);
 
+-- HNSW Vector Index for semantic similarity search
+CREATE INDEX IF NOT EXISTS idx_article_analyses_embedding ON public.article_analyses USING hnsw (embedding vector_cosine_ops);
+
 -- ENABLE ROW LEVEL SECURITY
 ALTER TABLE public.sources ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.articles ENABLE ROW LEVEL SECURITY;
@@ -124,5 +131,28 @@ CREATE POLICY "Allow public read access on article_analyses"
   TO public
   USING (true);
 
--- Logs, oxylabs_schedules, oxylabs_schedule_runs have NO public policies.
--- They are only accessible via service_role which bypasses RLS.
+-- 7. MATCH ARTICLES VECTOR SIMILARITY FUNCTION (RPC)
+CREATE OR REPLACE FUNCTION public.match_articles(
+  query_embedding vector(1536),
+  match_threshold float DEFAULT 0.4,
+  match_count int DEFAULT 3
+)
+RETURNS TABLE (
+  article_id uuid,
+  similarity float
+)
+LANGUAGE plpgsql
+SECURITY INVOKER
+AS $$
+begin
+  return query
+  select
+    article_analyses.article_id,
+    1 - (article_analyses.embedding <=> query_embedding) as similarity
+  from article_analyses
+  where article_analyses.embedding is not null
+    and 1 - (article_analyses.embedding <=> query_embedding) > match_threshold
+  order by article_analyses.embedding <=> query_embedding
+  limit match_count;
+end;
+$$;

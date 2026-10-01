@@ -92,6 +92,7 @@ export async function runAnalysis(input: AnalysisRequest): Promise<AnalysisSumma
             loaded_terms: result.analysis.loadedTerms,
             disclaimer: result.analysis.disclaimer,
             model: result.model,
+            embedding: result.embedding,
           });
           if (insertError) {
             if (insertError.code === "23505") {
