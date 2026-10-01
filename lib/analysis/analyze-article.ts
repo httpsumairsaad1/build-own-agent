@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { embed, generateText, Output } from "ai";
 import { createGoogle } from "@ai-sdk/google";
@@ -9,7 +9,7 @@ const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_AP
 const google = createGoogle({
   apiKey,
 });
-
+//MODEL
 const ANALYSIS_MODEL = "gemini-3.5-flash-lite";
 const EMBEDDING_MODEL = "text-embedding-004";
 const MAX_ARTICLE_TEXT_LENGTH = 30_000;
