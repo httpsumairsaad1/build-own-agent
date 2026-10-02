@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 import * as cheerio from "cheerio";
 import type { Element } from "domhandler";
@@ -88,8 +88,31 @@ function cleanArticleParagraphs($: cheerio.CheerioAPI): string[] {
   return [...unique];
 }
 
+function inferCategory(url: string, rawSection?: string | null): string {
+  const combined = `${url} ${rawSection ?? ""}`.toLowerCase();
+  if (/(tech|technology|ai|artificial-intelligence|cyber|semiconductor|crypto|gadget|software|innovation)/i.test(combined)) {
+    return "Tech-Vibe";
+  }
+  if (/(economy|business|market|finance|stock|invest|trade|bank|inflation|money|yield|bond|energy|oil)/i.test(combined)) {
+    return "Economy";
+  }
+  if (/(politics|election|government|congress|senate|white-house|diplomacy|defense|war|military|policy|iran|israel|security|president)/i.test(combined)) {
+    return "Politics";
+  }
+  if (/(entertainment|culture|celebrity|music|film|movie|lifestyle|fashion|arts|travel|flight|brawl)/i.test(combined)) {
+    return "Pop Culture";
+  }
+  if (/(social-change|climate|environment|health|justice|rights|society|education|civil)/i.test(combined)) {
+    return "Social Change";
+  }
+  return "Politics";
+}
+
 function validTitle(title: string): boolean {
-  return title.length >= 15 && title.length <= 300 && !/^(home|news|world|business|politics|sport|live|video|podcasts?)$/i.test(title);
+  if (title.length < 15 || title.length > 300) return false;
+  if (/^(home|news|world|business|politics|sport|live|video|podcasts?)$/i.test(title)) return false;
+  if (/^AI News \| Latest Headlines and Developments \|/i.test(title)) return false;
+  return true;
 }
 
 export function parseArticleDetail(html: string, originalUrl: string, sourceName: string): { article?: ParsedArticle; reason?: string } {
@@ -113,7 +136,15 @@ export function parseArticleDetail(html: string, originalUrl: string, sourceName
   const rawText = paragraphs.join("\n\n");
   if (!((paragraphs.length >= 3) || rawText.length >= 900)) return { reason: "insufficient_article_body" };
 
-  const category = normalizeText($("meta[property='article:section']").attr("content") ?? "") || null;
+  const rawSection = metaContent($, [
+    "meta[property='article:section']",
+    "meta[name='article:section']",
+    "meta[property='og:article:section']",
+    "meta[name='parsely-section']",
+    "meta[name='section']",
+    "meta[name='keywords']",
+  ]);
+  const category = inferCategory(canonicalUrl, rawSection);
   return { article: { canonicalUrl, title, imageUrl: normalizedImageUrl, publishedAt: publishedAt.toISOString(), rawText, category } };
 }
 

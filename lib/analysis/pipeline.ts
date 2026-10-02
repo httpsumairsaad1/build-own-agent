@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServiceSupabase } from "@/lib/supabase/server";
@@ -104,9 +104,13 @@ export async function runAnalysis(input: AnalysisRequest): Promise<AnalysisSumma
             throw new Error(`Analysis insert failed: ${insertError.message}`);
           }
 
+          const categoryToSave = result.analysis.category || article.category || "Politics";
           const { error: updateError } = await supabase
             .from("articles")
-            .update({ analyzed_at: new Date().toISOString() })
+            .update({
+              analyzed_at: new Date().toISOString(),
+              category: categoryToSave,
+            })
             .eq("id", article.id);
           if (updateError) throw new Error(`Unable to mark article analyzed: ${updateError.message}`);
 

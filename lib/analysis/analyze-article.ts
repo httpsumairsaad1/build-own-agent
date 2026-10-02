@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 import { embed, generateText, Output } from "ai";
 import { createGoogle } from "@ai-sdk/google";
@@ -40,6 +40,7 @@ export async function analyzeArticle(article: { title: string; rawText: string }
         "The framing percentages must be integers that total exactly 100.",
         "Return loaded terms only when they are materially loaded or framing-relevant.",
         "Include a concise disclaimer that framing is AI-estimated and based on article text only.",
+        "Classify the article into one of these 5 categories: 'Politics', 'Tech-Vibe', 'Economy', 'Pop Culture', or 'Social Change'.",
       ].join(" "),
       prompt: `Title: ${article.title}\n\nArticle text:\n${article.rawText.slice(0, MAX_ARTICLE_TEXT_LENGTH)}`,
     }),

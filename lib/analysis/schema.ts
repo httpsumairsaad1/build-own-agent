@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 import { z } from "zod";
 
@@ -15,6 +15,7 @@ export const articleAnalysisSchema = z
     framingNotes: z.string().trim().min(20).max(2_000),
     loadedTerms: z.array(z.string().trim().min(1).max(160)).max(20),
     disclaimer: z.string().trim().min(20).max(1_000),
+    category: z.enum(["Politics", "Tech-Vibe", "Economy", "Pop Culture", "Social Change"]).default("Politics"),
   })
   .superRefine((value, context) => {
     if (value.leftPercentage + value.centerPercentage + value.rightPercentage !== 100) {

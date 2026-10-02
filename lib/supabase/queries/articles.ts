@@ -123,55 +123,63 @@ export function mapSupabaseToArticle(row: JoinedArticleRow): Article {
   };
 }
 
-function getMockArticlesFiltered(category?: string, limit?: number): Article[] {
-  let list = MOCK_ARTICLES;
-  if (category && category.toLowerCase() !== "all" && category.toLowerCase() !== "more +") {
-    const searchCat = category.toLowerCase();
-    list = list.filter((a) => a.category.toLowerCase().includes(searchCat) || searchCat.includes(a.category.toLowerCase()));
+import type { Article } from "@/lib/data/mock-articles";
+
+/**
+ * Normalizes category search terms to match relevant categories and topics.
+ */
+function getCategorySearchTerms(category: string): string[] {
+  const c = category.toLowerCase().trim();
+  if (c.includes("tech")) {
+    return ["Tech-Vibe", "Technology", "Tech", "AI"];
   }
-  if (limit) {
-    list = list.slice(0, limit);
+  if (c.includes("econ")) {
+    return ["Economy", "Business", "Markets", "Finance"];
   }
-  return list.map((a, idx) => ({
-    ...a,
-    isFeatured: idx === 0,
-  }));
+  if (c.includes("politi")) {
+    return ["Politics", "World", "National", "Defense"];
+  }
+  if (c.includes("pop") || c.includes("culture")) {
+    return ["Pop Culture", "Culture", "Entertainment", "Lifestyle"];
+  }
+  if (c.includes("social")) {
+    return ["Social Change", "Climate", "Environment", "Society"];
+  }
+  return [category];
 }
 
 /**
  * Fetch articles from Supabase with joined sources and analyses.
- * Falls back to MOCK_ARTICLES if Supabase has 0 analyzed articles or errors.
+ * Returns only verified, analyzed real articles from Supabase.
  */
 export async function getArticles(category?: string, limit?: number): Promise<Article[]> {
   try {
     let query = supabase
       .from("articles")
-      .select("*, sources(*), article_analyses(*)");
+      .select("*, sources(*), article_analyses(*)")
+      .not("analyzed_at", "is", null)
+      .order("published_at", { ascending: false });
 
     if (category && category.toLowerCase() !== "all" && category.toLowerCase() !== "more +") {
-      query = query.ilike("category", `%${category}%`);
+      const terms = getCategorySearchTerms(category);
+      const orFilter = terms.map((t) => `category.ilike.%${t}%`).join(",");
+      query = query.or(orFilter);
     }
 
     if (limit) {
       query = query.limit(limit);
     }
 
-    const { data, error } = await query
-      .not("analyzed_at", "is", null)
-      .order("published_at", { ascending: false });
+    const { data, error } = await query;
 
     if (error || !data || (data as unknown[]).length === 0) {
-      return getMockArticlesFiltered(category, limit);
+      return [];
     }
 
     const rows = data as unknown as JoinedArticleRow[];
     const mapped = rows
       .filter((row) => row.article_analyses !== null)
       .map(mapSupabaseToArticle);
-
-    if (mapped.length === 0) {
-      return getMockArticlesFiltered(category, limit);
-    }
 
     // Mark the first article as featured
     if (mapped.length > 0) {
@@ -180,14 +188,13 @@ export async function getArticles(category?: string, limit?: number): Promise<Ar
 
     return mapped;
   } catch (err) {
-    console.warn("getArticles error:", err);
-    return getMockArticlesFiltered(category, limit);
+    console.error("getArticles query error:", err);
+    return [];
   }
 }
 
 /**
  * Fetch a single article by ID with joined source and analysis.
- * Falls back to MOCK_ARTICLES if not found in DB.
  */
 export async function getArticleById(id: string): Promise<Article | null> {
   try {
@@ -198,13 +205,13 @@ export async function getArticleById(id: string): Promise<Article | null> {
       .maybeSingle();
 
     if (error || !data) {
-      return MOCK_ARTICLES.find((a) => a.id === id) || null;
+      return null;
     }
 
     return mapSupabaseToArticle(data as unknown as JoinedArticleRow);
   } catch (err) {
-    console.warn("Supabase getArticleById error:", err);
-    return MOCK_ARTICLES.find((a) => a.id === id) || null;
+    console.error("Supabase getArticleById error:", err);
+    return null;
   }
 }
 
@@ -258,19 +265,12 @@ export async function getRelatedArticles(
       }
     }
 
-    // 3. Fallback to category-based query or mock fallback
+    // 3. Fallback to category-based real article query
     const all = await getArticles(category, limit + 2);
-    const filtered = all.filter((a) => a.id !== currentId).slice(0, limit);
-    if (filtered.length > 0) return filtered;
-
-    return MOCK_ARTICLES.filter(
-      (a) => a.id !== currentId && (!category || a.category.toLowerCase().includes(category.toLowerCase()))
-    ).slice(0, limit);
+    return all.filter((a) => a.id !== currentId).slice(0, limit);
   } catch (err) {
-    console.warn("getRelatedArticles error:", err);
-    return MOCK_ARTICLES.filter(
-      (a) => a.id !== currentId && (!category || a.category.toLowerCase().includes(category.toLowerCase()))
-    ).slice(0, limit);
+    console.error("getRelatedArticles error:", err);
+    return [];
   }
 }
 

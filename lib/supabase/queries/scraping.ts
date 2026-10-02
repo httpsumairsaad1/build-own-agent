@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SourceRow } from "../types";
@@ -41,10 +41,11 @@ export async function writeScrapeLog(
   supabase: SupabaseClient,
   status: "started" | "completed" | "failed",
   message: string,
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
+  runType: string = "manual_scrape"
 ): Promise<void> {
   const { error } = await supabase.from("logs").insert({
-    run_type: "manual_scrape",
+    run_type: runType,
     status,
     message,
     details: details ?? null,
