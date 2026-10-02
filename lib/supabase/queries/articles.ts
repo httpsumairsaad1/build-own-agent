@@ -1,6 +1,6 @@
 import { supabase } from "../client";
 import type { JoinedArticleRow } from "../types";
-import { type Article, MOCK_ARTICLES } from "@/lib/data/mock-articles";
+import type { Article } from "@/lib/data/mock-articles";
 
 /**
  * Format database timestamp into relative readable string (e.g. "2 hours ago" or "Sep 24, 2026").
@@ -122,8 +122,6 @@ export function mapSupabaseToArticle(row: JoinedArticleRow): Article {
     isFeatured: false,
   };
 }
-
-import type { Article } from "@/lib/data/mock-articles";
 
 /**
  * Normalizes category search terms to match relevant categories and topics.

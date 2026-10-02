@@ -10,7 +10,7 @@ const google = createGoogle({
   apiKey,
 });
 //MODEL
-const ANALYSIS_MODEL = "gemini-3.5-flash-lite";
+const ANALYSIS_MODEL = "gemini-2.0-flash";
 const EMBEDDING_MODEL = "text-embedding-004";
 const MAX_ARTICLE_TEXT_LENGTH = 30_000;
 

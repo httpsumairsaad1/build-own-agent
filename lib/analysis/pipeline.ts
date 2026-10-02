@@ -6,7 +6,7 @@ import { getPendingArticles, writeAnalysisLog } from "@/lib/supabase/queries/ana
 import { analyzeArticle } from "./analyze-article";
 
 const DEFAULT_BATCH_SIZE = 5;
-const MINIMUM_ANALYZABLE_TEXT_LENGTH = 500;
+const MINIMUM_ANALYZABLE_TEXT_LENGTH = 200;
 
 export type AnalysisRequest = {
   articleIds?: string[];
