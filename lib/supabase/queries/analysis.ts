@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -6,6 +6,7 @@ export type PendingArticle = {
   id: string;
   title: string;
   raw_text: string | null;
+  category: string | null;
   article_analyses: { id: string } | { id: string }[] | null;
 };
 
@@ -16,7 +17,7 @@ export async function getPendingArticles(
 ): Promise<PendingArticle[]> {
   const { data, error } = await supabase
     .from("articles")
-    .select("id, title, raw_text, article_analyses(id)")
+    .select("id, title, raw_text, category, article_analyses(id)")
     .order("scraped_at", { ascending: true });
 
   if (error) throw new Error(`Unable to load pending articles: ${error.message}`);

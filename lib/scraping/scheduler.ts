@@ -10,7 +10,7 @@ import type { SourceRow } from "@/lib/supabase/types";
 
 const OXYLABS_SCHEDULES_ENDPOINT = "https://data.oxylabs.io/v1/schedules";
 const OXYLABS_QUERIES_ENDPOINT = "https://data.oxylabs.io/v1/queries";
-const DEFAULT_PER_SOURCE_LIMIT = 5;
+const DEFAULT_PER_SOURCE_LIMIT = 10;
 
 function getOxylabsAuthHeader(): string {
   const username = process.env.OXY_WSA_USERNAME;
@@ -96,7 +96,7 @@ export async function syncSchedules(): Promise<{ created: number; deactivated: n
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        cron: "0 * * * *",
+        cron: "0 0 * * *",
         items: [
           {
             source: "universal",

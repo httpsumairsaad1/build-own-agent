@@ -7,7 +7,7 @@ import { fetchHtmlThroughOxylabs } from "./oxylabs";
 import { extractHomepageCandidates, parseArticleDetail } from "./parsers";
 import type { ScrapeRequest, ScrapeSummary } from "./types";
 
-const DEFAULT_PER_SOURCE_LIMIT = 5;
+const DEFAULT_PER_SOURCE_LIMIT = 10;
 
 function incrementReason(summary: ScrapeSummary, reason: string): void {
   summary.rejectionReasons[reason] = (summary.rejectionReasons[reason] ?? 0) + 1;

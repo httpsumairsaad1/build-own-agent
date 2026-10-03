@@ -1,4 +1,4 @@
-﻿import { timingSafeEqual } from "node:crypto";
+import { timingSafeEqual } from "node:crypto";
 import { runManualScrape } from "@/lib/scraping/pipeline";
 import type { ScrapeRequest } from "@/lib/scraping/types";
 
@@ -20,7 +20,7 @@ function parseInput(value: unknown): ScrapeRequest | null {
   const sourceIds = input.sourceIds;
   const perSourceLimit = input.perSourceLimit;
   if (sourceIds !== undefined && (!Array.isArray(sourceIds) || sourceIds.some((id) => typeof id !== "string" || !id.trim()))) return null;
-  if (perSourceLimit !== undefined && (!Number.isInteger(perSourceLimit) || (perSourceLimit as number) < 1 || (perSourceLimit as number) > 5)) return null;
+  if (perSourceLimit !== undefined && (!Number.isInteger(perSourceLimit) || (perSourceLimit as number) < 1 || (perSourceLimit as number) > 10)) return null;
   return { sourceIds: sourceIds as string[] | undefined, perSourceLimit: perSourceLimit as number | undefined };
 }
 
@@ -34,7 +34,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: "Expected a JSON request body." }, { status: 400 });
   }
   const input = parseInput(body);
-  if (!input) return Response.json({ error: "Invalid sourceIds or perSourceLimit (must be an integer from 1 through 5)." }, { status: 400 });
+  if (!input) return Response.json({ error: "Invalid sourceIds or perSourceLimit (must be an integer from 1 through 10)." }, { status: 400 });
 
   const summary = await runManualScrape(input);
   return Response.json(summary, { status: summary.status === "completed" ? 200 : 500 });

@@ -6,6 +6,11 @@ Implement a server-only AI analysis pipeline for vibeXnews. `POST /api/analyze` 
 
 This scope excludes embeddings, pgvector related-article search, scheduler processing, and UI changes. Embeddings are a later project stage.
 
+
+out of scope (do not bild here)
+* §20 pgvector / embeddings — explicitly "after AI analysis is working". No `embedding` column, no `text-embedding-3-small`, no Related Articles.
+* §18 Oxylabs Scheduler and `/api/cron/pipeline`. The cron route will later call this same analysis layer, so the core logic must be reusable, but building the cron/scheduler is separate work.
+
 ## Skills and documentation read
 
 - `AGENTS.md`

@@ -76,6 +76,8 @@ export async function runAnalysis(input: AnalysisRequest): Promise<AnalysisSumma
         }
 
         try {
+          // Pacing delay to stay well within free tier rate limits
+          await new Promise((resolve) => setTimeout(resolve, 2500));
           const result = await analyzeWithRetry({ title: article.title, rawText: article.raw_text });
           const { error: insertError } = await supabase.from("article_analyses").insert({
             article_id: article.id,
@@ -92,7 +94,6 @@ export async function runAnalysis(input: AnalysisRequest): Promise<AnalysisSumma
             loaded_terms: result.analysis.loadedTerms,
             disclaimer: result.analysis.disclaimer,
             model: result.model,
-            embedding: result.embedding,
           });
           if (insertError) {
             if (insertError.code === "23505") {
